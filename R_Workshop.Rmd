@@ -1,0 +1,421 @@
+---
+title: "Workshop"
+author: "Hyundo Im"
+date: '2017-05-13'
+output:
+  html_document: default
+  pdf_document: default
+---
+# R Workshop
+
+## ggplot
+
+* install packages:
+```{r}
+#install.packages("dplyr")
+#install.packages("ggplot2")
+#install.packages("RColorBrewer")
+#install.packages("data.table")
+#install.packages("tidyverse")
+```
+
+
+* Use packages:
+```{r}
+###Workshop
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(data.table)
+library(tidyverse)
+library(plotly)
+```
+
+* Download data from url: fread()
+```{r}
+url<-'https://raw.githubusercontent.com/collnell/burritos/master/sd_burritos.csv'
+ritos <- fread(url)
+head(ritos)
+```
+
+* Draw simple ggplot
+```{r}
+ggplot()+
+  geom_histogram(data=ritos,aes(x=Cost),bins=40)
+```
+
+* ggplot with color
+```{r}
+ggplot()+
+  geom_histogram(data=ritos, aes(x=Cost,fill=Chips), binwidth=1)
+```
+
+```{r}
+ggplot(data=ritos,aes(x=Rec, y=Cost))+
+  geom_boxplot()+
+  geom_point()
+```
+
+* Hierarchy of visualization Which visualization will be shown first?
+```{r}
+ggplot(data=ritos,aes(x=Rec, y=Cost))+
+  geom_point(aes(color=Rec))+
+  geom_boxplot()
+```
+
+* Violin plot
+```{r}
+ggplot(data=ritos,aes(x=Rec,y=Cost))+
+  geom_violin(aes(fill=Rec))+
+  geom_point()+
+  geom_jitter()
+
+```
+
+* base plot+
+```{r}
+k = ggplot(data=ritos, aes(x=Volume, y= Cost))
+k + geom_point(aes(shape=Rec, color = Guac))
+```
+
+* Another Example
+```{r}
+k+geom_point(aes(shape=Rec, size=Taste))
+```
+
+```{r}
+k+geom_point(color ='blue')
+```
+
+```{r}
+k+geom_point(aes(color=Taste),alpha = .5, size=3)
+```
+
+```{r}
+k+geom_point(aes(fill=Taste), color='red', shape=21, alpha=.5,size=3 )
+```
+
+## geom_smooth()
+```{r}
+k+geom_point()+
+  geom_smooth()
+```
+
+* linear line
+```{r}
+k+ geom_point()+
+  geom_smooth(method = 'lm', se=F)
+```
+
+* log scale
+
+
+## Scales()
+* log scale
+```{r}
+kk<-ggplot(data=ritos, aes(Volume,Cost))+
+  geom_point()+
+  geom_smooth(method='lm',se=F)+
+scale_x_log10()
+ggplotly(kk)
+```
+
+## Color scales() and RColorBrewer
+* What colors does RColorBrewer have?
+```{r}
+display.brewer.all()
+```
+
+```{r}
+ggplot(ritos, aes(Volume, Cost))+
+geom_point(aes(color = Taste), size=2)+
+geom_smooth(method='lm', se=F, color='black', lty='dashed')+
+scale_x_log10()+
+scale_color_gradient(low='red', high=rgb(0,1,0,1))+
+annotate('text',x=1,y=5,label='hello') # Place a text on the graph
+```
+
+### Scales by shape
+```{r}
+ggplot(ritos, aes(Volume, Cost))+
+geom_point(aes(shape = Rec), size=2)+
+geom_smooth(method='lm', se=F, color='black', lty='dashed')+
+scale_x_log10()+
+scale_shape_manual(values = c(3,6), labels = c('Throw it away','Eat it again'))
+
+```
+
+
+## Coordinates
+
+### flipping a plot- Somthing wrong. work on it later
+```{r}
+d<-last_plot()
+#d+coord_flip()
+```
+
+## Plot and axis titles
+```{r}
+#d+labs(title='Title goes here', y='Volume',
+#       x='Burrito Prices', caption = 'caption appears here')
+```
+
+##Themes
+###Cowplot
+```{r}
+#install.packages("cowplot")
+library(cowplot)
+g<-ggplot(ritos, aes(Volume, Cost))+
+geom_point(aes(color = Taste), size=2)+
+geom_smooth(method='lm', se=F, color='black', lty='dashed')+
+scale_color_gradient(low='red', high='blue')
+g_bw<-g+theme_bw()
+g_min<-g+theme_minimal()
+plot_grid(g_bw, g_min, nrow=1, ncol=2, labels=c('theme_bw','theme_minimal'))
+```
+
+
+### ggthemes
+```{r}
+library(ggthemes)
+g_538<-g+theme_fivethirtyeight()
+g_econ<-g+theme_economist()
+plot_grid(g_538, g_econ, nrow=1, ncol=2, labels=c('538','The Economist'))
+```
+
+### Different Themes: customized version(theme_mooney)
+```{r}
+theme_mooney <- function(base_size=16) {
+  library(grid)
+  library(ggthemes)
+  (theme_foundation(base_size=base_size, base_family='sans')
+    + theme(plot.title = element_text(face = "bold",
+                                      size = rel(1.2), hjust = 0.5),
+            text = element_text(),
+            panel.background = element_rect(colour = NA),
+            plot.background = element_rect(colour = NA),
+            panel.border = element_rect(colour = NA),
+            axis.title = element_text(face = "bold",size = rel(1)),
+            axis.title.y = element_text(angle=90,vjust =2),
+            axis.title.x = element_text(vjust = -0.2),
+            axis.text = element_text(), 
+            axis.line = element_line(colour="black"),
+            axis.ticks = element_line(),
+            panel.grid.major = element_line(colour="#f0f0f0"),
+            panel.grid.minor = element_blank(),
+            legend.key = element_rect(colour = NA),
+            legend.position = "bottom",
+            legend.direction = "horizontal",
+            legend.key.size= unit(0.2, "cm"),
+            legend.margin = margin(0,0,0,0, unit='pt'),
+            legend.title = element_text(face="italic"),
+            plot.margin=unit(c(10,5,5,5),"mm"),
+            strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+            strip.text = element_text(face="bold")
+    ))
+  
+}
+
+scale_fill_pretty <- function(...){
+  library(scales)
+  discrete_scale("fill","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+  
+}
+
+scale_color_pretty <- function(...){
+  library(scales)
+  discrete_scale("colour","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+  
+}
+g_bw+theme_mooney()
+```
+
+
+# Data Wrangling with dplyr
+## dplyr
+* first argument is dataframe, second describes action
+```{r}
+#tidyverse.org
+library(tidyverse) # It contains dplyr, ggplot, forcats(for categorical data),etc
+```
+
+
+
+### Still using ritos...
+* filter data to San Diego only
+```{r}
+dim(ritos)
+```
+```{r}
+ritos<-filter(ritos,NonSD ==0)
+dim(ritos)
+```
+
+###filter(contd)
+* How many different kinds of burritos?
+```{r}
+length(unique(ritos$Burrito)) #different kinds of burritos
+```
+*Filter data to only California data
+```{r}
+ca.data<-filter(ritos, Burrito=='california')
+dim(ca.data)
+```
+* Filter data to only California burritos
+```{r}
+ca<-filter(ritos,grepl('california',ritos$Burrito))
+dim(ca)
+length(unique(ca$Burrito))
+
+```
+* Why don't we check a note about roaches?
+```{r}
+grep('roach',ritos$Notes)
+ritos[48,c('Notes')]
+```
+
+```{r}
+head(select(ritos, Location, Yelp))
+```
+
+## Mutate() <- this is cool!
+```{r}
+df<-select(ritos, Taste, Rec, Cost, Volume)
+head(df)
+df<-mutate(df, Cost_Vol = Cost/Volume) 
+head(df)
+df$new<-round(df$Cost_Vol,2) #rounding decimal places
+head(df)
+```
+```{r}
+ggplot(df,aes(x=Cost_Vol, y=Taste))+
+  geom_point(aes(color=Rec))+
+  labs(x='Cost by Volume')
+
+```
+
+## %>% pipe
+* Combine multiple operations in series
+ + easy to read, reduces nesting
+ + Create fewer dataframes
+```{r}
+cali<- ritos %>%
+  filter(NonSD == 0, grepl('california',ritos$Burrito))%>%
+  select(-NonSD)%>%
+  mutate(Cost_vol = Cost/Volume)
+head(cali)
+
+```
+
+## group_by & summarize
+```{r}
+summarize(ritos,mean(Cost,na.rm=TRUE))
+```
+```{r}
+summarize(ritos,sd(Cost,na.rm=TRUE))
+```
+
+* Uniformity by Rec
+```{r}
+ritos%>%group_by(Rec)%>%
+  summarize(mean(Uniformity,na.rm=TRUE))
+```
+
+## Example: california burrito
+```{r}
+sem <- function(x) sd(x, na.rm = TRUE)/sqrt(length(x))
+
+best <- cali %>%
+filter(!is.na(Fries), !is.na(Beef)) %>%
+select(-(Beef:Zucchini))%>%
+group_by(Neighborhood, Location) %>%
+summarize(quality = mean(Taste, na.rm=TRUE),
+n =length(Taste),
+se = sd(Taste,na.rm=TRUE))
+best<-best%>%
+  filter(n>1)%>%
+  arrange(quality)
+head(best)
+```
+  
+```{r}
+ggplot(data = best, aes(x = reorder(Location, quality), y = quality))+
+geom_bar(stat = 'identity', fill='gold')+
+geom_errorbar(aes(ymin = quality - se, ymax = quality + se), width = .4)+
+coord_flip()+
+labs(title = 'The best burrito', y = 'Burrito Quality', x ='Location')+
+theme_classic()+
+theme(legend.position = 'none')
+```
+
+### Exmpl: best rating
+```{r}
+names(ritos)
+rating <- ritos%>%
+  mutate(total = (Google+Yelp)/2)%>%
+  select(Location, Neighborhood, total)%>%
+  unique()%>%
+  arrange(desc(total))
+  
+
+head(rating)
+```
+
+## joins
+```{r}
+library(dplyr)
+new<-left_join(best,rating,by="Location")
+head(new)
+new.right<-right_join(best,rating,by="Location")
+head(new.right)
+```
+
+## Cool ggplot
+```{r}
+ggplot(new, aes(x=total, y=quality))+
+geom_point()+
+geom_smooth(method='lm', se=F, color='red', lty='dashed')+
+geom_text(aes(label=Location), position=position_jitter(width=.3, height=.1))+
+labs(x='Restaurant Rating', y='Burrito Quality')
+```
+```{r}
+library(ggrepel)
+ggplot(new, aes(x=total, y=quality))+
+geom_point()+
+geom_smooth(method='lm', se=F, color='red', lty='dashed')+
+geom_text_repel(aes(label=Location))+
+labs(x='Restaurant Rating', y='Burrito Quality')
+```
+
+## data.table
+```{r}
+library(data.table)
+
+ing<-ritos%>%
+  select(Rec, Tortilla:Taste)
+head(ing)
+```
+###melt
+* convert datato long format
+```{r}
+df.melt <- melt(ing, id.vars = c("Rec","Taste"))
+str(df.melt)
+```
+```{r}
+ggplot(df.melt, aes(x=Taste, y= value))+
+  geom_point()
+```
+```{r}
+ggplot(df.melt, aes(x = Taste, y = value, color = variable))+
+geom_point()+
+geom_smooth(method='lm', color='black')+
+facet_wrap(~variable)+
+labs(x='Burrito Quality', y='Score')
+```
+
+ 
+  
+  
+  
+  
+  
